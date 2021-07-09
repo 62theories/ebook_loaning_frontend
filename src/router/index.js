@@ -8,6 +8,9 @@ const routes = [
     path: "/",
     name: "Home",
     component: () => import("../views/Home.vue"),
+    meta: {
+      mustLogin: true,
+    },
   },
   {
     path: "/login",
@@ -29,16 +32,25 @@ const routes = [
     path: "/mylend",
     name: "MyLend",
     component: () => import("../views/MyLend.vue"),
+    meta: {
+      mustLogin: true,
+    },
   },
   {
     path: "/booklend/:bookId",
     name: "BookLend",
     component: () => import("../views/BookLend.vue"),
+    meta: {
+      mustLogin: true,
+    },
   },
   {
     path: "/bookread/:lendId",
     name: "BookLend",
     component: () => import("../views/BookRead.vue"),
+    meta: {
+      mustLogin: true,
+    },
   },
   {
     path: "*",
@@ -58,6 +70,14 @@ router.beforeEach((to, from, next) => {
     if (localStorage.getItem("token") != null) {
       next({
         path: "/",
+      })
+    } else {
+      next()
+    }
+  } else if (to.matched.some((record) => record.meta.mustLogin)) {
+    if (localStorage.getItem("token") == null) {
+      next({
+        path: "/login",
       })
     } else {
       next()
