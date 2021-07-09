@@ -6,7 +6,8 @@
         <router-link to="/mylend">การจองของฉัน</router-link>
       </div>
     </div>
-    <div class="d-flex mb-3 p-3 flex-wrap">
+    <div v-if="isLoading">loading</div>
+    <div v-else class="d-flex mb-3 p-3 flex-wrap">
       <div
         v-for="(book, index) in books"
         :key="`book${index}`"
@@ -24,12 +25,22 @@ import api from "../common/api";
 export default {
   data: function() {
     return {
-      books: []
+      books: [],
+      isLoading: false
     };
   },
   async created() {
-    const { data } = await api.get("/book");
-    this.books = data;
+    if (!this.isLoading) {
+      try {
+        this.isLoading = true;
+        const { data } = await api.get("/book");
+        this.books = data;
+        this.isLoading = false;
+      } catch (err) {
+        console.log(err);
+        alert("err");
+      }
+    }
   }
 };
 </script>

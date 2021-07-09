@@ -6,14 +6,21 @@
         <router-link to="/mylend">การจองของฉัน</router-link>
       </div>
     </div>
-    <div v-if="pdfUrl" class="pdf">
-      <div class="d-flex justify-content-between">
-        <button @click="toPage(currentPage - 1)">-1</button>
-        <div>{{ currentPage }} / {{ pageCount }}</div>
-        <button @click="toPage(currentPage + 1)">+1</button>
+    <div v-if="isLoading">loading</div>
+    <div v-else>
+      <div v-if="pdfUrl" class="pdf">
+        <div class="d-flex justify-content-between">
+          <button @click="toPage(currentPage - 1)">-1</button>
+          <div>{{ currentPage }} / {{ pageCount }}</div>
+          <button @click="toPage(currentPage + 1)">+1</button>
+        </div>
+        <pdf
+          :src="pdfUrl"
+          :page="currentPage"
+          @num-pages="pageCount = $event"
+        />
+        <!-- <embed width="100%" height="100%" :src="pdfUrl" /> -->
       </div>
-      <pdf :src="pdfUrl" :page="currentPage" @num-pages="pageCount = $event" />
-      <!-- <embed width="100%" height="100%" :src="pdfUrl" /> -->
     </div>
   </div>
 </template>
@@ -27,7 +34,8 @@ export default {
       pdfUrl: null,
       currentPage: 1,
       pageCount: 0,
-      numPages: undefined
+      numPages: undefined,
+      isLoading: false
     };
   },
   components: {
@@ -35,21 +43,25 @@ export default {
   },
   async created() {
     try {
-      const { data } = await api.post(
-        `/lend/${this.$route.params.lendId}/getfile`,
-        {
-          userId: localStorage.getItem("token")
-        },
-        {
-          responseType: "blob"
-        }
-      );
-      const blob = new Blob([data], { type: "application/pdf" });
-      var reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = () => {
-        this.pdfUrl = `${reader.result}`;
-      };
+      if (!this.isLoading) {
+        this.isLoading = true;
+        const { data } = await api.post(
+          `/lend/${this.$route.params.lendId}/getfile`,
+          {
+            userId: localStorage.getItem("token")
+          },
+          {
+            responseType: "blob"
+          }
+        );
+        const blob = new Blob([data], { type: "application/pdf" });
+        var reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          this.pdfUrl = `${reader.result}`;
+          this.isLoading = false;
+        };
+      }
     } catch (err) {
       alert("error");
     }

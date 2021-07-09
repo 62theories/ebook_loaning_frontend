@@ -6,14 +6,22 @@
         <router-link to="/mylend">การจองของฉัน</router-link>
       </div>
     </div>
-    <div class="d-flex mb-3 p-3 flex-wrap">
-      <div
-        v-for="(book, index) in books"
-        :key="`book${index}`"
-        class="book mr-3"
-        @click="$router.push(`/bookread/${book.lendId}`)"
-      >
-        {{ book.name }}
+    <div v-if="isLoading">
+      loading
+    </div>
+    <div v-else>
+      <div v-if="books.length > 0" class="d-flex mb-3 p-3 flex-wrap">
+        <div
+          v-for="(book, index) in books"
+          :key="`book${index}`"
+          class="book mr-3"
+          @click="$router.push(`/bookread/${book.lendId}`)"
+        >
+          {{ book.name }}
+        </div>
+      </div>
+      <div v-else>
+        ไม่พบการยืม
       </div>
     </div>
   </div>
@@ -24,16 +32,26 @@ import api from "../common/api";
 export default {
   data: function() {
     return {
-      books: []
+      books: [],
+      isLoading: false
     };
   },
   async created() {
-    const { data } = await api.post("/lend/mylend", {
-      userId: localStorage.getItem("token")
-    });
-    this.books = data.reduce((acc, cur) => {
-      return [...acc, { ...cur.book, lendId: cur.id }];
-    }, []);
+    try {
+      if (!this.isLoading) {
+        this.isLoading = true;
+        const { data } = await api.post("/lend/mylend", {
+          userId: localStorage.getItem("token")
+        });
+        this.books = data.reduce((acc, cur) => {
+          return [...acc, { ...cur.book, lendId: cur.id }];
+        }, []);
+        this.isLoading = false;
+      }
+    } catch (err) {
+      console.log(err);
+      alert("error");
+    }
   }
 };
 </script>
